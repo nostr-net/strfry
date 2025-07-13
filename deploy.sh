@@ -3,6 +3,9 @@
 set -e
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+    echo "Deploys strfry to a fresh Ubuntu VPS."
+    echo "(Installs nginx, acme.sh, and builds strfry from scratch)"
+    echo
     echo "Usage: $0 HOST [ADMIN_EMAIL]"
     echo "Example: $0 my-relay.example.com admin@example.com"
     exit 1
