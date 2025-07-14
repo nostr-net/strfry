@@ -89,18 +89,19 @@ if [ -d "$STRFRY_BUILD_DIR/.git" ]; then
     cd "$STRFRY_BUILD_DIR"
     git fetch
     git reset --hard "origin/$STRFRY_REPO_VERSION"
+    if git submodule status --recursive | grep -qE '^[+-U]'; then
+        git submodule update --init --recursive
+    fi
+    make -j$(nproc)
 else
     echo "Cloning fresh repository..."
     rm -rf "$STRFRY_BUILD_DIR"
     git clone --branch "$STRFRY_REPO_VERSION" "$STRFRY_REPO_URL" "$STRFRY_BUILD_DIR"
     cd "$STRFRY_BUILD_DIR"
-fi
-
-if git submodule status --recursive | grep -qE '^[+-U]'; then
     git submodule update --init --recursive
+    make setup-golpe
+    make -j$(nproc)
 fi
-make setup-golpe
-make -j$(nproc)
 
 # 5. Install strfry
 echo "--- Installing strfry binary ---"
