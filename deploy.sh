@@ -2,25 +2,27 @@
 
 set -e
 
-if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+if [ "$#" -lt 1 ] || [ "$#" -gt 3 ]; then
     echo "Deploys strfry to a fresh Ubuntu VPS."
     echo "(Installs nginx, acme.sh, and builds strfry from scratch)"
     echo
-    echo "Usage: $0 HOST [ADMIN_EMAIL]"
-    echo "Example: $0 my-relay.example.com admin@example.com"
+    echo "Usage: $0 HOST [ADMIN_EMAIL] [ADMIN_PUBKEY]"
+    echo "Example: $0 my-relay.example.com admin@example.com <32-byte-hex-pubkey>"
     exit 1
 fi
 
 HOST="$1"
 ADMIN_EMAIL="${2:-admin@$HOST}"
+ADMIN_PUBKEY="${3:-}"
 
 # The rest of the script will be executed on the remote host
-ssh "root@$HOST" bash -s -- "$HOST" "$ADMIN_EMAIL" << 'EOF'
+ssh "root@$HOST" bash -s -- "$HOST" "$ADMIN_EMAIL" "$ADMIN_PUBKEY" << 'EOF'
 set -e
 set -x
 
 HOST="$1"
 ADMIN_EMAIL="$2"
+ADMIN_PUBKEY="$3"
 
 # Variables
 STRFRY_USER="strfry"
@@ -175,7 +177,7 @@ relay {
 
         # NIP-11: Administrative nostr pubkey, for contact purposes
         # PLEASE CUSTOMIZE
-        pubkey = ""
+        pubkey = "${ADMIN_PUBKEY}"
 
         # NIP-11: Alternative administrative contact (email, website, etc)
         # PLEASE CUSTOMIZE
@@ -206,7 +208,8 @@ relay {
     # Maximum records that can be returned per filter
     maxFilterLimit = 500
 
-    # Maximum number of subscriptions (concurrent REQs) a connection can have open at any time
+    # Maximum number of subscriptions a client can have open at any time.
+    # A subscription is created by a REQ message and has a unique ID.
     maxSubsPerConnection = 20
 
     writePolicy {
