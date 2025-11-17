@@ -26,6 +26,7 @@ void RelayServer::runIngester(ThreadPool<MsgIngester>::Thread &thr) {
                         auto &cmd = jsonGetString(arr[0], "first element not a command like REQ");
 
                         if (cmd == "EVENT") {
+                            PROM_INC_CLIENT_MSG("EVENT");
                             if (cfg().relay__logging__dumpInEvents) LI << "[" << msg->connId << "] dumpInEvent: " << msg->payload; 
 
                             try {
@@ -36,6 +37,7 @@ void RelayServer::runIngester(ThreadPool<MsgIngester>::Thread &thr) {
                                 if (cfg().relay__logging__invalidEvents) LI << "Rejected invalid event: " << e.what();
                             }
                         } else if (cmd == "REQ") {
+                            PROM_INC_CLIENT_MSG("REQ");
                             if (cfg().relay__logging__dumpInReqs) LI << "[" << msg->connId << "] dumpInReq: " << msg->payload; 
 
                             try {
@@ -44,6 +46,7 @@ void RelayServer::runIngester(ThreadPool<MsgIngester>::Thread &thr) {
                                 sendNoticeError(msg->connId, std::string("bad req: ") + e.what());
                             }
                         } else if (cmd == "CLOSE") {
+                            PROM_INC_CLIENT_MSG("CLOSE");
                             if (cfg().relay__logging__dumpInReqs) LI << "[" << msg->connId << "] dumpInReq: " << msg->payload; 
 
                             try {
@@ -52,6 +55,7 @@ void RelayServer::runIngester(ThreadPool<MsgIngester>::Thread &thr) {
                                 sendNoticeError(msg->connId, std::string("bad close: ") + e.what());
                             }
                         } else if (cmd.starts_with("NEG-")) {
+                            PROM_INC_CLIENT_MSG(std::string(cmd));
                             if (!cfg().relay__negentropy__enabled) throw herr("negentropy disabled");
 
                             try {
@@ -91,6 +95,9 @@ void RelayServer::ingesterProcessEvent(lmdb::txn &txn, uint64_t connId, std::str
     parseAndVerifyEvent(origJson, secpCtx, true, true, packedStr, jsonStr);
 
     PackedEventView packed(packedStr);
+    
+    // Track event kind metrics
+    PROM_INC_EVENT_KIND(std::to_string(packed.kind()));
 
     {
         bool foundProtected = false;

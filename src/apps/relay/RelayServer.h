@@ -18,6 +18,7 @@
 #include "filters.h"
 #include "jsonParseUtils.h"
 #include "Decompressor.h"
+#include "PrometheusMetrics.h"
 
 
 
@@ -197,6 +198,7 @@ struct RelayServer {
     }
 
     void sendEvent(uint64_t connId, const SubId &subId, std::string_view evJson) {
+        PROM_INC_RELAY_MSG("EVENT");
         auto subIdSv = subId.sv();
 
         std::string reply;
@@ -217,6 +219,7 @@ struct RelayServer {
     }
 
     void sendNoticeError(uint64_t connId, std::string &&payload) {
+        PROM_INC_RELAY_MSG("NOTICE");
         LI << "sending error to [" << connId << "]: " << payload;
         auto reply = tao::json::value::array({ "NOTICE", std::string("ERROR: ") + payload });
         tpWebsocket.dispatch(0, MsgWebsocket{MsgWebsocket::Send{connId, std::move(tao::json::to_string(reply))}});
@@ -224,6 +227,7 @@ struct RelayServer {
     }
 
     void sendOKResponse(uint64_t connId, std::string_view eventIdHex, bool written, std::string_view message) {
+        PROM_INC_RELAY_MSG("OK");
         auto reply = tao::json::value::array({ "OK", eventIdHex, written, message });
         tpWebsocket.dispatch(0, MsgWebsocket{MsgWebsocket::Send{connId, std::move(tao::json::to_string(reply))}});
         hubTrigger->send();
