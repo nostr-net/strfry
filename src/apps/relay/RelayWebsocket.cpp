@@ -80,6 +80,10 @@ void RelayServer::runWebsocket(ThreadPool<MsgWebsocket>::Thread &thr) {
             if (cfg().relay__info__contact.size()) nip11["contact"] = cfg().relay__info__contact;
             if (cfg().relay__info__pubkey.size()) nip11["pubkey"] = cfg().relay__info__pubkey;
             if (cfg().relay__info__icon.size()) nip11["icon"] = cfg().relay__info__icon;
+            if (cfg().relay__info__banner.size()) nip11["banner"] = cfg().relay__info__banner;
+            if (cfg().relay__info__self.size()) nip11["self"] = cfg().relay__info__self;
+            if (cfg().relay__info__privacy.size()) nip11["privacy_policy"] = cfg().relay__info__privacy;
+            if (cfg().relay__info__terms.size()) nip11["terms_of_service"] = cfg().relay__info__terms;
 
             rendered = preGenerateHttpResponse("application/json", tao::json::to_string(nip11));
             ver = cfg().version();
