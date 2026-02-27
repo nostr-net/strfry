@@ -1,5 +1,8 @@
 #!/bin/bash
 
+## This script is a contribution from @chr15m
+## For more information, see the following pull request: https://github.com/hoytech/strfry/pull/151
+
 set -e
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 3 ]; then
