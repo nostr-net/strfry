@@ -169,7 +169,7 @@ struct RelayServer {
 
     void runIngester(ThreadPool<MsgIngester>::Thread &thr);
     void ingesterProcessEvent(lmdb::txn &txn, uint64_t connId, std::string ipAddr, secp256k1_context *secpCtx, const tao::json::value &origJson, std::vector<MsgWriter> &output);
-    void ingesterProcessReq(lmdb::txn &txn, uint64_t connId, const tao::json::value &origJson);
+    void ingesterProcessReq(lmdb::txn &txn, uint64_t connId, const tao::json::value &origJson, std::string &outSubIdStr);
     void ingesterProcessClose(lmdb::txn &txn, uint64_t connId, const tao::json::value &origJson);
     void ingesterProcessNegentropy(lmdb::txn &txn, Decompressor &decomp, uint64_t connId, const tao::json::value &origJson);
 
@@ -222,6 +222,14 @@ struct RelayServer {
         PROM_INC_RELAY_MSG("NOTICE");
         LI << "sending error to [" << connId << "]: " << payload;
         auto reply = tao::json::value::array({ "NOTICE", std::string("ERROR: ") + payload });
+        tpWebsocket.dispatch(0, MsgWebsocket{MsgWebsocket::Send{connId, std::move(tao::json::to_string(reply))}});
+        hubTrigger->send();
+    }
+
+    void sendClosedError(uint64_t connId, const std::string &subId, std::string &&payload) {
+        PROM_INC_RELAY_MSG("CLOSED");
+        LI << "sending closed to [" << connId << "]: " << payload;
+        auto reply = tao::json::value::array({ "CLOSED", subId, std::string("ERROR: ") + payload });
         tpWebsocket.dispatch(0, MsgWebsocket{MsgWebsocket::Send{connId, std::move(tao::json::to_string(reply))}});
         hubTrigger->send();
     }
