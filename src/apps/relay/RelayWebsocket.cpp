@@ -175,7 +175,11 @@ void RelayServer::runWebsocket(ThreadPool<MsgWebsocket>::Thread &thr) {
         std::string host = req.getHeader("host").toString();
         std::string url = req.getUrl().toString();
 
-        if (url == "/.well-known/nodeinfo") {
+        if (url == "/metrics") {
+            auto metrics = PrometheusMetrics::getInstance().render();
+            auto response = preGenerateHttpResponse("text/plain; version=0.0.4", metrics);
+            res->write(response.data(), response.size());
+        } else if (url == "/.well-known/nodeinfo") {
             auto nodeInfo = getNodeInfoHttpResponse(host);
             res->write(nodeInfo.data(), nodeInfo.size());
         } else if (url == "/nodeinfo/2.1") {
@@ -291,6 +295,7 @@ void RelayServer::runWebsocket(ThreadPool<MsgWebsocket>::Thread &thr) {
                 tempBuf += "]";
 
                 for (auto &item : msg->list) {
+                    PROM_INC_RELAY_MSG("EVENT");
                     auto subIdSv = item.subId.sv();
                     auto *p = tempBuf.data() + MAX_SUBID_SIZE - subIdSv.size();
                     memcpy(p, "[\"EVENT\",\"", 10);
