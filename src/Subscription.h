@@ -46,13 +46,14 @@ namespace std {
 
 
 struct Subscription : NonCopyable {
-    Subscription(uint64_t connId_, const std::string &subId_, NostrFilterGroup filterGroup_) : connId(connId_), subId(subId_), filterGroup(filterGroup_) {}
+    Subscription(uint64_t connId_, const std::string &subId_, NostrFilterGroup filterGroup_, std::string ipAddr_ = "") : connId(connId_), subId(subId_), filterGroup(filterGroup_), ipAddr(std::move(ipAddr_)) {}
 
     // Params
 
     uint64_t connId;
     SubId subId;
     NostrFilterGroup filterGroup;
+    std::string ipAddr;
 
     // State
 

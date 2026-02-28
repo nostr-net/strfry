@@ -37,6 +37,29 @@ std::string parseIP(const std::string &ip) {
 }
 
 
+bool isPrivilegedIP(std::string_view ipBytes) {
+    const auto &list = cfg().relay__privilegedIPs;
+    if (list.empty() || ipBytes.empty()) return false;
+
+    std::string rendered = renderIP(ipBytes);
+
+    size_t pos = 0;
+    while (pos < list.size()) {
+        size_t end = list.find(',', pos);
+        if (end == std::string::npos) end = list.size();
+
+        std::string_view entry(list.data() + pos, end - pos);
+        while (!entry.empty() && entry.front() == ' ') entry.remove_prefix(1);
+        while (!entry.empty() && entry.back() == ' ') entry.remove_suffix(1);
+
+        if (entry == rendered) return true;
+        pos = end + 1;
+    }
+
+    return false;
+}
+
+
 std::string renderSize(uint64_t si) {
     if (si < 1024) return std::to_string(si) + "b";
 

@@ -10,6 +10,7 @@ using namespace phmap;
 
 
 std::string renderIP(std::string_view ipBytes);
+bool isPrivilegedIP(std::string_view ipBytes);
 std::string renderSize(uint64_t si);
 std::string renderPercent(double p);
 uint64_t parseUint64(const std::string &s);

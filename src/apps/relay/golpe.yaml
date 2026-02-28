@@ -69,6 +69,12 @@ config:
   - name: relay__maxSubsPerConnection
     desc: "Maximum number of subscriptions (concurrent REQs) a connection can have open at any time"
     default: 20
+  - name: relay__maxSubsPerConnectionPrivileged
+    desc: "Maximum subscriptions for privileged IPs (see relay.privilegedIPs). 0 means no limit."
+    default: 0
+  - name: relay__privilegedIPs
+    desc: "Comma-separated list of IP addresses that are allowed relay.maxSubsPerConnectionPrivileged subscriptions instead of relay.maxSubsPerConnection"
+    default: ""
 
   - name: relay__writePolicy__plugin
     desc: "If non-empty, path to an executable script that implements the writePolicy plugin logic"

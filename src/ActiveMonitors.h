@@ -55,8 +55,14 @@ struct ActiveMonitors : NonCopyable {
         auto res = conns.try_emplace(sub.connId);
         auto &connMonitors = res.first->second;
 
-        if (connMonitors.size() >= cfg().relay__maxSubsPerConnection) {
-            return false;
+        {
+            if (!cfg().relay__privilegedIPs.empty() && isPrivilegedIP(sub.ipAddr)) {
+                uint64_t privLimit = cfg().relay__maxSubsPerConnectionPrivileged;
+                if (privLimit > 0 && connMonitors.size() >= privLimit) return false;
+                // privLimit == 0 means no limit: fall through and accept
+            } else {
+                if (connMonitors.size() >= cfg().relay__maxSubsPerConnection) return false;
+            }
         }
 
         auto subId = sub.subId;

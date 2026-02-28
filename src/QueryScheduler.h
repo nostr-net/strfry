@@ -28,8 +28,14 @@ struct QueryScheduler : NonCopyable {
         auto res = conns.try_emplace(sub.connId);
         auto &connQueries = res.first->second;
 
-        if (connQueries.size() >= cfg().relay__maxSubsPerConnection) {
-            return false;
+        {
+            if (!cfg().relay__privilegedIPs.empty() && isPrivilegedIP(sub.ipAddr)) {
+                uint64_t privLimit = cfg().relay__maxSubsPerConnectionPrivileged;
+                if (privLimit > 0 && connQueries.size() >= privLimit) return false;
+                // privLimit == 0 means no limit: fall through and accept
+            } else {
+                if (connQueries.size() >= cfg().relay__maxSubsPerConnection) return false;
+            }
         }
 
         DBQuery *q = new DBQuery(sub);

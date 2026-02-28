@@ -38,12 +38,12 @@ void RelayServer::runIngester(ThreadPool<MsgIngester>::Thread &thr) {
                             }
                         } else if (cmd == "REQ") {
                             PROM_INC_CLIENT_MSG("REQ");
-                            if (cfg().relay__logging__dumpInReqs) LI << "[" << msg->connId << "] dumpInReq: " << msg->payload; 
+                            if (cfg().relay__logging__dumpInReqs) LI << "[" << msg->connId << "] dumpInReq: " << msg->payload;
 
                             std::string subIdStr;
 
                             try {
-                                ingesterProcessReq(txn, msg->connId, arr, subIdStr);
+                                ingesterProcessReq(txn, msg->connId, msg->ipAddr, arr, subIdStr);
                             } catch (std::exception &e) {
                                 if (subIdStr.size()) sendClosedError(msg->connId, subIdStr, std::string("bad req: ") + e.what());
                                 else sendNoticeError(msg->connId, std::string("bad req: ") + e.what());
@@ -132,12 +132,12 @@ void RelayServer::ingesterProcessEvent(lmdb::txn &txn, uint64_t connId, std::str
     output.emplace_back(MsgWriter{MsgWriter::AddEvent{connId, std::move(ipAddr), std::move(packedStr), std::move(jsonStr)}});
 }
 
-void RelayServer::ingesterProcessReq(lmdb::txn &txn, uint64_t connId, const tao::json::value &arr, std::string &outSubIdStr) {
+void RelayServer::ingesterProcessReq(lmdb::txn &txn, uint64_t connId, const std::string &ipAddr, const tao::json::value &arr, std::string &outSubIdStr) {
     if (arr.get_array().size() < 2 + 1) throw herr("arr too small");
     outSubIdStr = jsonGetString(arr[1], "REQ subscription id was not a string");
     if (arr.get_array().size() > 2 + cfg().relay__maxReqFilterSize) throw herr("arr too big");
 
-    Subscription sub(connId, outSubIdStr, NostrFilterGroup(arr));
+    Subscription sub(connId, outSubIdStr, NostrFilterGroup(arr), ipAddr);
 
     tpReqWorker.dispatch(connId, MsgReqWorker{MsgReqWorker::NewSub{std::move(sub)}});
 }
