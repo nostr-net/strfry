@@ -1,0 +1,6 @@
+strfry
+build/
+*.o
+*.d
+golpe/external/uWebSockets/libuWS.a
+golpe/external/uWebSockets/src/*.o

@@ -1,0 +1,26 @@
+FROM alpine:3.18.3 AS builder
+
+RUN apk --no-cache add \
+    linux-headers \
+    git \
+    g++ \
+    make \
+    perl \
+    pkgconfig \
+    libtool \
+    ca-certificates \
+    libressl-dev \
+    zlib-dev \
+    lmdb-dev \
+    flatbuffers-dev \
+    libsecp256k1-dev \
+    zstd-dev
+
+WORKDIR /build
+COPY . .
+
+RUN make setup-golpe && make clean && make -j$(nproc)
+
+# Export stage: copy just the binary so --output can extract it
+FROM scratch AS export
+COPY --from=builder /build/strfry /strfry
